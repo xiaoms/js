@@ -32,7 +32,7 @@ cFly.define("cFly.notifier", function () {
         if (!callback) {
             return;
         }
-        var token = cFly.identifyId(tokenPrefix),
+        var token = cFly.guid(tokenPrefix),
             callbacks = subscribeCache[what];
         var info = {
             token: token,

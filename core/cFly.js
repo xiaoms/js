@@ -6,13 +6,7 @@ var cFly = (function (global) {
     var O = {
         version: "1.0"
     };
-    return O;
-})(window || this);
 
-/**
- * 工具
- */
-(function (global, O) {
     var op = Object.prototype,
         toString = op.toString,
         hasOwn = op.hasOwnProperty,
@@ -45,8 +39,13 @@ var cFly = (function (global) {
         return toString.call(obj) === "[object Object]";
     }
 
-    function isNative(any) {
-        return /^[^{]+\{\s*\[native code/.test(toString.call(any));
+    /**
+     * 判断Funciton是否是原生函数
+     * @param {Function} func 待判断的函数
+     * @returns {boolean}
+     */
+    function isNative(func) {
+        return /^[^{]+\{\s*\[native code/.test(toString.call(func));
     }
 
     /**
@@ -142,7 +141,7 @@ var cFly = (function (global) {
          * @param {String} prefix 前缀
          * @returns {*}
          */
-        identifyId: function (prefix) {
+        guid: function (prefix) {
             return ( prefix || "") + (++identifyId);
         },
         /**
@@ -245,6 +244,7 @@ var cFly = (function (global) {
         baseEle = head && head.getElementsByTagName("base")[0],
         scriptQueue = [],
         defaultContextName = "__default__",
+        contexts = [],
         absoluteUrlReg = /^http(s)*:\/\//;
 
     var getScriptState = function (url) {
@@ -343,8 +343,28 @@ var cFly = (function (global) {
 
     };
 
-    var require = function (deps, callback, errorback) {
-
+    function createContext() {
+        return {};
+    };
+    var require = function (deps, callback, errorback, optional) {
+        var config, context, contextName = defaultContextName;
+        if (!O.isArray(deps) && typeof deps !== "string") {
+            config = deps;
+            if (O.isArray(callback)) {
+                deps = callback;
+                callback = errorback;
+                errorback = optional;
+            } else {
+                deps = [];
+            }
+        }
+        if (config && config.context) {
+            contextName = config.context;
+        }
+        context = contexts[contextName];
+        if (!context) {
+            context = contexts[contaxtName] = createContext();
+        }
     };
     global.require = O.require = require;
     global.define = O.define = function (modname, deps, func) {
