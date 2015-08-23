@@ -1,7 +1,7 @@
 /**
  * Created by admin on 2015/8/20.
  */
-var flyCtrip = (function (global) {
+var cFly = (function (global) {
 
     var O = {
         version: "1.0"
@@ -216,7 +216,7 @@ var flyCtrip = (function (global) {
             return ret;
         },
     });
-})(window || this, flyCtrip);
+})(window || this, cFly);
 
 /**
  * event
@@ -237,7 +237,7 @@ var flyCtrip = (function (global) {
             node.removeEventListener(eventName, eventName);
         }
     }
-})(window || this, flyCtrip);
+})(window || this, cFly);
 
 (function (global, O) {
     var doc = global.document,
@@ -254,7 +254,7 @@ var flyCtrip = (function (global) {
     };
 
     /**
-     * flyCtrip.loadScript(url,callback,errorCallback)
+     * cFly.loadScript(url,callback,errorCallback)
      * url[String|Object]：
      * callback：成功时回调
      * errorCallback：失败时回调
@@ -350,4 +350,4 @@ var flyCtrip = (function (global) {
     global.define = O.define = function (modname, deps, func) {
 
     };
-})(window || this, flyCtrip);
+})(window || this, cFly);

@@ -1,4 +1,4 @@
-flyCtrip.define("flyCtrip.notifier", function () {
+cFly.define("cFly.notifier", function () {
     var subscribeCache = {},
         tokenPrefix = "__subscribe__";
 
@@ -32,7 +32,7 @@ flyCtrip.define("flyCtrip.notifier", function () {
         if (!callback) {
             return;
         }
-        var token = flyCtrip.identifyId(tokenPrefix),
+        var token = cFly.identifyId(tokenPrefix),
             callbacks = subscribeCache[what];
         var info = {
             token: token,
@@ -53,7 +53,7 @@ flyCtrip.define("flyCtrip.notifier", function () {
      * notifier.unsubscribe("__subscribe__12343")  ¸ù¾Ý¶©ÔÄºÅÍË¶©
      */
     var unsubscribe = function () {
-        var args = flyCtrip.makeArray(arguments);
+        var args = cFly.makeArray(arguments);
         if (args.length === 0) {
             return;
         }
