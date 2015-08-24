@@ -158,7 +158,7 @@ var cFly = (function (global) {
 
             for (i = 0, len = args.length; i < len; i++) {
                 p = ('' + args[i]).split('.');
-                for (j = (o[p[0]] == o) ? 1 : 0, nlen = p.length; j < nlen; j++) {
+                for (j = (o[p[0]] === o) ? 1 : 0, nlen = p.length; j < nlen; j++) {
                     o = o[p[j]] = o[p[j]] || {};
                 }
             }
@@ -194,7 +194,7 @@ var cFly = (function (global) {
         },
         find: function (arr, func, context) {
             if (!arr || !isArray(arr)) {
-                return;
+                return null;
             }
             for (var i = 0, value = arr[i], len = arr.length; i < len; value = arr[++i]) {
                 if (func.call(context || value, value, i)) {
@@ -204,7 +204,7 @@ var cFly = (function (global) {
         },
         where: function (arr, func, context) {
             if (!arr || !isArray(arr)) {
-                return;
+                return [];
             }
             var ret = [];
             for (var i = 0, value = arr[i], len = arr.length; i < len; value = arr[++i]) {
