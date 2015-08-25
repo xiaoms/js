@@ -1,19 +1,4 @@
 (function () {
-    var definedMods = [{
-            name: "cQuery",
-            url: "http://webresource.c-ctrip.com/code/cquery/cQuery_110421.src.js?ReleaseNo=CR2014_03_17_17_58_39",
-            exports: "cQuery",
-            deps: [],
-            state: "loading"
-        }],
-        requireQueue = [{
-            name: "cQuery",
-            url: "http://webresource.c-ctrip.com/code/cquery/cQuery_110421.src.js?ReleaseNo=CR2014_03_17_17_58_39",
-            exports: "cQuery",
-            deps: [],
-            state: "loading"
-        }
-        ];
 
     function require(deps, callback, errback) {
         var context = getContext()
@@ -36,6 +21,19 @@
                 }
             }
         };
+        var definedMods = [{
+                name: "cQuery",
+                url: "http://webresource.c-ctrip.com/code/cquery/cQuery_110421.src.js?ReleaseNo=CR2014_03_17_17_58_39",
+                exports: {test: 12},
+                deps: []
+            }],
+            requireQueue = [{
+                name: "cQuery",
+                url: "http://webresource.c-ctrip.com/code/cquery/cQuery_110421.src.js?ReleaseNo=CR2014_03_17_17_58_39",
+                exports: "cQuery",
+                deps: []
+            }],
+            failedQueue = [];
 
         function normalizeUrl(modName) {
 

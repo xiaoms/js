@@ -10,7 +10,7 @@ var cFly = (function (global) {
     var op = Object.prototype,
         toString = op.toString,
         hasOwn = op.hasOwnProperty,
-        identifyId = 0;
+        internalGuid = 0;
 
     /**
      * 判断obj是否为function
@@ -137,12 +137,12 @@ var cFly = (function (global) {
 
     mix(O, {
         /**
-         * 自增长Id
+         * 全局唯一ID
          * @param {String} prefix 前缀
-         * @returns {*}
+         * @returns {String}
          */
         guid: function (prefix) {
-            return ( prefix || "") + (++identifyId);
+            return ( prefix || "") + (++internalGuid);
         },
         /**
          * 命名空间
@@ -165,8 +165,26 @@ var cFly = (function (global) {
             return o;
         },
         /**
-         * 遍历数组或枚举对象
-         * @param {Array|Object} arr 要遍历的数组或对象
+         * 枚举对象属性
+         * @param {Object} obj 待遍历的对象
+         * @param {Function} func 调用函数，return true将跳出循环
+         * @param context func执行上下文，不指定，默认为value
+         */
+        eachProp: function (obj, func, context) {
+            if (!obj) {
+                return;
+            }
+            for (var key in obj) {
+                if (hasProp(obj, key)) {
+                    if (func.call(context || obj[key], obj[key], key)) {
+                        break;
+                    }
+                }
+            }
+        },
+        /**
+         * 顺序遍历数组
+         * @param {Array} arr 要遍历的数组或对象
          * @param {Function} func 调用函数，return true将跳出循环
          * @param {Object} context func执行上下文，不指定，默认为item
          */
@@ -180,18 +198,13 @@ var cFly = (function (global) {
                 }
             }
         },
-        eachProp: function (obj, func, context) {
-            if (!obj) {
-                return;
-            }
-            for (var key in obj) {
-                if (hasProp(obj, key)) {
-                    if (func.call(context || obj[key], obj[key], key)) {
-                        break;
-                    }
-                }
-            }
-        },
+        /**
+         *搜索第一个符合条件的元素
+         * @param {Array} arr 待遍历的数组
+         * @param {Function} func 条件判断函数，return true将返回该元素
+         * @param {Object} context func执行上下文
+         * @returns {*} 返回第一个符合条件的元素
+         */
         find: function (arr, func, context) {
             if (!arr || !isArray(arr)) {
                 return null;
@@ -202,6 +215,13 @@ var cFly = (function (global) {
                 }
             }
         },
+        /**
+         *搜索所有符合条件的元素
+         * @param {Array} arr 待遍历的数组
+         * @param {Function} func 条件判断函数，return true将返回该元素
+         * @param {Object} context func执行上下文
+         * @returns {Array} 返回所有符合条件的元素
+         */
         where: function (arr, func, context) {
             if (!arr || !isArray(arr)) {
                 return [];
@@ -215,6 +235,7 @@ var cFly = (function (global) {
             return ret;
         },
     });
+    return O;
 })(window || this, cFly);
 
 /**
