@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
-    <script src="core/cFly.js" type="text/javascript"></script>
+    <script src="require.js" type="text/javascript"></script>
 
 </head>
 <body>
-
+<script>
+  var context=  require.config({
+      context:"111"
+  });
+    context(["modA"],function(modA){
+        alert(modA.x);
+    });
+</script>
 </body>
 </html>

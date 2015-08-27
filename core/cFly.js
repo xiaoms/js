@@ -45,6 +45,7 @@ var cFly = (function (global) {
      * @returns {boolean}
      */
     function isNative(func) {
+        console.log(toString.call(func));
         return /^[^{]+\{\s*\[native code/.test(toString.call(func));
     }
 
@@ -127,6 +128,7 @@ var cFly = (function (global) {
     }
 
     mix(O, {
+        isNative: isNative,
         isFunction: isFunction,
         isArray: isArray,
         isObject: isObject,
@@ -238,26 +240,6 @@ var cFly = (function (global) {
     return O;
 })(window || this, cFly);
 
-/**
- * event
- */
-(function (global, O) {
-    function addEventListener(node, eventName, callback) {
-        if (node.attachEvent && O.isNative(node.attachEvent)) {
-            node.attachEvent("on" + eventName, callback);
-        } else {
-            node.addEventListener(eventName, callback, false);
-        }
-    }
-
-    function removeEventListener(node, eventName) {
-        if (node.detachEvent && O.isNative(node.detachEvent)) {
-            node.detachEvent("on" + eventName, eventName);
-        } else {
-            node.removeEventListener(eventName, eventName);
-        }
-    }
-})(window || this, cFly);
 
 (function (global, O) {
     var doc = global.document,
@@ -292,53 +274,43 @@ var cFly = (function (global) {
             async: false
         };
         var callback = args.length > 1 && args[1],
-            errorCallback = args.length > 2 && args[2],
+            errback = args.length > 2 && args[2],
             cfg = args[0];
         if (typeof cfg === "string") {
             cfg = {url: cfg};
         }
         O.mix(defaultcfg, cfg, true, true);
 
-        var scriptInQueue = getScriptState(defaultcfg.url);
-        if (scriptInQueue != null) {
 
-        }
-        var scriptInfo = {
-            url: defaultcfg.url,
-            state: "inited"
-        };
-        scriptQueue.push(scriptInfo);
-        var onScriptload = function (evt) {
-            if (evt.type === "load" || /^(complete|loaded)$/.test(ele.readyState)) {
-                scriptInfo.state = "loaded";
+        var onScriptLoad = function (evt) {
+            evt = evt || global.event;
+            console.log("readyState:" + node.readyState + ",type:" + evt.type);
+            if (evt.type === "load" || /^(complete|loaded)$/.test(node.readyState)) {
                 callback && callback();
             }
         }
         var onScriptError = function (evt) {
-            scriptInfo.state = "error";
-            errorCallback && errorCallback();
+            evt = evt || global.event;
+            errback && errback();
         }
 
-        var ele = doc.createElement("script");
-        ele.charset = defaultcfg.charset;
-        ele.async = defaultcfg.async;
-        ele.type = defaultcfg.type;
-
-        if (ele.attachEvent && O.isNative(ele.attachEvent)) {
-            ele.attachEvent("onreadystatechange", onScriptload);
-        } else {
-            ele.addEventListener("load", onScriptload, false);
-            if (errorCallback) {
-                ele.addEventListener("error", onScriptError, false);
-            }
+        var node = doc.createElement("script");
+        node.charset = defaultcfg.charset;
+        node.async = defaultcfg.async;
+        node.type = defaultcfg.type;
+        node.setAttribute("data-context", "");
+        node.onload = node.onreadystatechange = onScriptLoad;
+        if (errback) {
+            node.onerror = onScriptError;
         }
-        ele.src = defaultcfg.url;
+
+        node.src = defaultcfg.url;
         if (baseEle) {
-            head.insertBefore(ele, baseEle);
+            head.insertBefore(node, baseEle);
         } else {
-            head.appendChild(ele);
+            head.appendChild(node);
         }
-        return ele;
+        return node;
     }
 
     var module = function () {
@@ -360,21 +332,162 @@ var cFly = (function (global) {
         }
     };
 
-    var configMod = function (cfg) {
+    function createContext(contextName) {
+        var definedMods = {},
+            requireQueue = [],
+            failedQueue = [],
+            isChecking,
+            checkTimeoutId,
+            config = {
+                baseUrl: "",//模块根目录
+                context: defaultContextName,//require环境
+                isCombineMods: true,//是否合并模块
+                preloads: ["jquery"],//预加载模块
+                paths: {//模块地址映射
+                    "jquery": "http://code.jquery.com/jquery-2.1.4.js"
+                },
+                adapter: {
+                    "cQuery": {
+                        "exports": "cQuery"
+                    }
+                }
+            };
 
-    };
+        function normalizeName(modName) {
+            return modName;
+        }
 
-    function createContext() {
-        return {};
+        function getModUrl(modName) {
+            return config.baseUrl + "/" + modName + ".js";
+        }
+
+        function getModMap(deps) {
+            var combineUrl = "";
+            if (config.isCombineMods) {
+                combineUrl = getCombineUrl(deps);
+            }
+            var map = {};
+            O.each(deps, function (value, key) {
+
+                var name = normalizeName(value);
+                var url = getModUrl(name);
+                var module = {
+                    name: name,
+                    originalName: value,
+                    url: url
+                };
+                if (config.adapter) {
+                    module.adapter = config.adapter[value];
+                }
+                map[name] = module;
+            });
+            return map;
+        }
+
+        function getCombineUrl(deps) {
+            O.each(deps, function (modName, i) {
+                normalizeUrl(modName);
+            });
+            return "http://webresource.c-ctrip.com/flightbook/r2/";
+        }
+
+        function checkLoaded(modMap, callback, errback) {
+            if (isChecking) {
+                return;
+            }
+            isChecking = true;
+            var isloaded = true;
+            O.each(modMap, function (mod, key) {
+                var state = getModState(mod.name);
+                //如果没有初始化，创建script标签进行加载
+                if (state === "notinited") {
+                    //把mod放入请求的队列
+                    requireQueue.push(mod);
+                    loadScript(mod.url, function () {
+                        //外部模块适配
+                        if (mod.adapter && mod.adapter.exports) {
+                            mod.exports = eval(mod.adapter.exports);
+                            definedMods.push(mod);
+                        }
+                    }, function () {
+                        requireQueue.remove(mod);
+                        failedQueue.push(mod);
+                    });
+                }
+                if (state != "defined") {
+                    isloaded = false;
+                }
+            });
+
+            if (isloaded) {
+                callback();
+            }
+
+            if (!isloaded && checkTimeoutId === 0) {
+                checkTimeoutId = setTimeout(function () {
+                    checkTimeoutId = 0;
+                    checkLoaded(modMap);
+                }, 50)
+            }
+            isChecking = false;
+        }
+
+        /**
+         * 获取模块状态：notinited,loading,defined,error
+         * @param modName
+         */
+        function getModState(modName) {
+            if (definedMods[modName]) {
+                return "defined";
+            }
+            var loading = find(requireQueue, function (value, i) {
+                return value.name == modName;
+            });
+            if (loading) {
+                return "loading";
+            }
+            var failed = find(failedQueue, function (value, i) {
+                return value.name == modName;
+            });
+            if (failed) {
+                return "error";
+            }
+            return "notinited"
+        }
+
+        function require(deps, callback, errback) {
+            if (deps.length === 0) {
+                callback();
+                return;
+            }
+            var modMap = getModMap(deps);
+            checkLoaded(modMap, callback, errback);
+        }
+
+
+        function define(name, deps, callback) {
+            if (deps.length > 0) {
+                require(deps, function () {
+                    definedMods[name] = callback.apply(this, this.arguments);
+                });
+            } else {
+                definedMods[name] = callback();
+            }
+        }
+
+        return {
+            contextName: contextName,
+            require: require
+        };
     };
-    var require = function (deps, callback, errorback, optional) {
+    var require = function (deps, callback, errback, optional) {
         var config, context, contextName = defaultContextName;
         if (!O.isArray(deps) && typeof deps !== "string") {
             config = deps;
             if (O.isArray(callback)) {
                 deps = callback;
-                callback = errorback;
-                errorback = optional;
+                callback = errback;
+                errback = optional;
             } else {
                 deps = [];
             }
@@ -384,11 +497,13 @@ var cFly = (function (global) {
         }
         context = contexts[contextName];
         if (!context) {
-            context = contexts[contaxtName] = createContext();
+            context = contexts[contaxtName] = createContext(contextName);
         }
+        context.require(deps, callback, errback);
     };
     global.require = O.require = require;
     global.define = O.define = function (modname, deps, func) {
 
     };
+    O.loadScript = loadScript;
 })(window || this, cFly);
