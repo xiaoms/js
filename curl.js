@@ -703,6 +703,7 @@
 				// IE6-9 need to use onreadystatechange and look for
 				// el.readyState in {loaded, complete} (yes, we need both)
 				if (ev.type == 'load' || readyStates[el.readyState]) {
+					console.log("script loaded.");
 					delete activeScripts[def.id];
 					// release event listeners
 					el.onload = el.onreadystatechange = el.onerror = ''; // ie cries if we use undefined
@@ -734,9 +735,10 @@
 			// IE will load the script sync if it's in the cache, so
 			// indicate the current resource definition if this happens.
 			activeScripts[def.id] = el;
-
+console.log("before insert");
 			head.insertBefore(el, insertBeforeEl);
 
+			console.log("after insert");
 			// the js! plugin uses this
 			return el;
 		},
@@ -1287,7 +1289,9 @@
 				argsNet = args;
 			}
 		}
+		console.log(12313);
 		if (id != undef) {
+			console.log("test");
 			// named define(), it is in the cache if we are loading a dependency
 			// (could also be a secondary define() appearing in a built file, etc.)
 			def = cache[id];
@@ -1308,6 +1312,7 @@
 	function define () {
 		// wrap inner _define so it can be replaced without losing define.amd
 		var args = core.fixArgs(arguments);
+		console.log(args);
 		_define(args);
 	}
 
