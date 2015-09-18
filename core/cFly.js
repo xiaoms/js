@@ -196,7 +196,7 @@ var cFly = (function (global) {
             }
             for (var key in obj) {
                 if (hasProp(obj, key)) {
-                    if (func.call(context || obj[key], obj[key], key)===false) {
+                    if (func.call(context || obj[key], obj[key], key) === false) {
                         break;
                     }
                 }
@@ -213,7 +213,7 @@ var cFly = (function (global) {
                 return;
             }
             for (var i = 0, value = arr[i], len = arr.length; i < len; value = arr[++i]) {
-                if (func.call(context || value, value, i)===false) {
+                if (func.call(context || value, value, i) === false) {
                     break;
                 }
             }
@@ -254,6 +254,18 @@ var cFly = (function (global) {
             }
             return ret;
         },
+        /**
+         * É¾³ý¿Õ°×
+         * @param value ÒªtrimµÄ×Ö·û´®
+         * @param chars È¥³ýÇ°ºó×Ö·û´®
+         */
+        trim: function (value, chars) {
+            var reg = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+            if (chars != null) {
+                reg = new RegExp('/^(' + chars + ')+|(' + chars + ')+$/g');
+            }
+            return value == null ? "" : ( value + "" ).replace(reg, "");
+        }
     });
     return O;
 })(window || this, cFly);

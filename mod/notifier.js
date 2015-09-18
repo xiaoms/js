@@ -122,6 +122,7 @@ cFly.define("cFly.notifier", function () {
         }
     };
     return {
+        EVENTTYPE:{},
         notify: notify,
         register: register,
         remove: remove
