@@ -262,9 +262,9 @@ var cFly = (function (global) {
         trim: function (value, chars) {
             var reg = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
             if (chars != null) {
-                reg = new RegExp('/^(' + chars + ')+|(' + chars + ')+$/g');
+                reg = new RegExp('^(' + chars + ')+|(' + chars + ')+$','g');
             }
-            return value == null ? "" : ( value + "" ).replace(reg, "");
+            return value == null ? "" : (value + "").replace(reg, "");
         }
     });
     return O;

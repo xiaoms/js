@@ -57,7 +57,7 @@ cFly.define("cFly.placeholder", function () {
 
     return {
         fix: function (el, className) {
-            if (isSupport || !el || (el.getAttribute("type") && cFly.trim(el.getAttribute("type").toLowerCase()) != "text")) {
+            if (isSupport || !el ) {
                 return;
             }
             var els = cFly.makeArray(el),
@@ -65,25 +65,27 @@ cFly.define("cFly.placeholder", function () {
                 e;
             for (var i = 0, l = els.length; i < l; i++) {
                 e = els[i];
-                if (!e["placeholder_fixed"]) {
-                    e["placeholder_fixed"] = true;
-                    if (e.addEventListener) {
-                        e.addEventListener("focus", function () {
-                            focus(e, className);
-                        });
-                        e.addEventListener("blur", function () {
-                            blur(e, className);
-                        });
-                    } else {
-                        e.attachEvent("onfocus", function () {
-                            focus(e, className);
-                        });
-                        e.attachEvent("onblur", function () {
-                            blur(e, className);
-                        });
+                if (e.getAttribute("type") && cFly.trim(e.getAttribute("type").toLowerCase()) == "text") {
+                    if (!e["placeholder_fixed"]) {
+                        e["placeholder_fixed"] = true;
+                        if (e.addEventListener) {
+                            e.addEventListener("focus", function () {
+                                focus(e, className);
+                            });
+                            e.addEventListener("blur", function () {
+                                blur(e, className);
+                            });
+                        } else {
+                            e.attachEvent("onfocus", function () {
+                                focus(e, className);
+                            });
+                            e.attachEvent("onblur", function () {
+                                blur(e, className);
+                            });
+                        }
                     }
+                    blur(e, className);
                 }
-                blur(e, className);
             }
         }
     };
