@@ -1,6 +1,3 @@
-/**
- * Created by admin on 2015/8/20.
- */
 var cFly = (function (global) {
 
     var O = {
@@ -40,6 +37,23 @@ var cFly = (function (global) {
     }
 
     /**
+     * 判断是否空对象({})
+     * @param obj
+     * @returns {boolean}
+     */
+    function isEmptyObject(obj) {
+        if(!obj){
+            return false;
+        }
+        for (var key in obj) {
+            if (hasProp(obj, key)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * 判断Funciton是否是原生函数
      * @param {Function} func 待判断的函数
      * @returns {boolean}
@@ -75,6 +89,11 @@ var cFly = (function (global) {
             deepMix = overwrite && len > 3 && args[len - 1] === true;
         deepMix && len--;
         overwrite && len--;
+
+        if (!target) {
+            target = source;
+            return;
+        }
 
         for (i = 1; i < len; i++) {
             if (source = args[i]) {
@@ -137,20 +156,44 @@ var cFly = (function (global) {
         makeArray: makeArray
     });
 
+    /**
+     * 根据提供的属性过滤对象
+     * @param target
+     * @param filter
+     * @returns {*}
+     */
+    function filterObject(target, filter) {
+        var t = target, key, value;
+        for (key in filter) {
+            if(hasProp(filter,key)) {
+                value = filter[key];
+                t = target[key]
+                if (isObject(value) && !isEmptyObject(value)) {
+                    return filterObject(t, value);
+                } else if (t != value) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
     mix(O, {
+        filterObject:filterObject,
         /**
          * 全局唯一ID
          * @param {String} prefix 前缀
          * @returns {String}
          */
         guid: function (prefix) {
-            return ( prefix || "") + (++internalGuid);
+            return (prefix || "") + (++internalGuid);
         },
         /**
          * 命名空间
          * Ctrip.namespace("Ctrip.Flight")-->Ctrip.Flight={}
          * Ctrip.namespace("window.Ctrip.Flight")-->Ctrip.Flight={}
          * Ctrip.namespace("Ctrip.Flight","Ctrip.Hotel","Ctrip.Train")-->Ctrip.Flight={},Ctrip.Hotel={},Ctrip.Train={}
+         * @
          */
         namespace: function () {
             var args = makeArray(arguments),
@@ -166,28 +209,9 @@ var cFly = (function (global) {
             return o;
         },
         /**
-         * 数组反转
-         * @param {Array} arr 待反转的数组
-         * @returns {Array} 返回反转后的数组
-         */
-        reverse: function (arr) {
-            if (!arr) {
-                return;
-            }
-            var i = 0, j = arr.length - 1, temp;
-            while (i < j) {
-                temp = arr[i];
-                arr[i] = arr[j];
-                arr[j] = temp;
-                i++;
-                j--;
-            }
-            return arr;
-        },
-        /**
          * 枚举对象属性
          * @param {Object} obj 待遍历的对象
-         * @param {Function} func 调用函数，return false将跳出循环
+         * @param {Function} func 调用函数，return true将跳出循环
          * @param context func执行上下文，不指定，默认为value
          */
         eachProp: function (obj, func, context) {
@@ -196,7 +220,7 @@ var cFly = (function (global) {
             }
             for (var key in obj) {
                 if (hasProp(obj, key)) {
-                    if (func.call(context || obj[key], obj[key], key) === false) {
+                    if (func.call(context || obj[key], obj[key], key)) {
                         break;
                     }
                 }
@@ -205,7 +229,7 @@ var cFly = (function (global) {
         /**
          * 顺序遍历数组
          * @param {Array} arr 要遍历的数组或对象
-         * @param {Function} func 调用函数，return false将跳出循环
+         * @param {Function} func 调用函数，return true将跳出循环
          * @param {Object} context func执行上下文，不指定，默认为item
          */
         each: function (arr, func, context) {
@@ -213,7 +237,7 @@ var cFly = (function (global) {
                 return;
             }
             for (var i = 0, value = arr[i], len = arr.length; i < len; value = arr[++i]) {
-                if (func.call(context || value, value, i) === false) {
+                if (func.call(context || value, value, i)) {
                     break;
                 }
             }
@@ -230,8 +254,14 @@ var cFly = (function (global) {
                 return null;
             }
             for (var i = 0, value = arr[i], len = arr.length; i < len; value = arr[++i]) {
-                if (func.call(context || value, value, i)) {
-                    return value;
+                if (isFunction(func)) {
+                    if (func.call(context || value, value, i)) {
+                        return value;
+                    }
+                } else {
+                    if (filterObject(value, func)) {
+                        return value;
+                    }
                 }
             }
         },
@@ -248,8 +278,14 @@ var cFly = (function (global) {
             }
             var ret = [];
             for (var i = 0, value = arr[i], len = arr.length; i < len; value = arr[++i]) {
-                if (func.call(context || value, value, i)) {
-                    ret.push(value);
+                if (isFunction(func)) {
+                    if (func.call(context || value, value, i)) {
+                        ret.push(value);
+                    }
+                } else {
+                    if (filterObject(value, func)) {
+                        ret.push(value);
+                    }
                 }
             }
             return ret;
@@ -262,7 +298,7 @@ var cFly = (function (global) {
         trim: function (value, chars) {
             var reg = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
             if (chars != null) {
-                reg = new RegExp('^(' + chars + ')+|(' + chars + ')+$','g');
+                reg = new RegExp('^(' + chars + ')+|(' + chars + ')+$', 'g');
             }
             return value == null ? "" : (value + "").replace(reg, "");
         }
