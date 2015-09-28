@@ -1561,7 +1561,8 @@ var requirejs, require, define;
                     shExports = shim.exports;
 
                 takeGlobalQueue();
-
+console.log(moduleName);
+                console.log(defQueue);
                 while (defQueue.length) {
                     args = defQueue.shift();
                     if (args[0] === null) {
@@ -1702,9 +1703,9 @@ var requirejs, require, define;
                     //Reset interactive script so a script node is not held onto for
                     //to long.
                     interactiveScript = null;
-
                     //Pull out the name of the module and the context.
                     var data = getScriptData(evt);
+                    console.log("loaded:"+data.id);
                     context.completeLoad(data.id);
                 }
             },
@@ -2103,3 +2104,12 @@ var requirejs, require, define;
     //Set up with config info.
     req(cfg);
 }(this));
+
+
+function delay(t){
+var now=new Date().getTime();
+    var target=now+t;
+    while(new Date().getTime()<target){
+
+    }
+}
